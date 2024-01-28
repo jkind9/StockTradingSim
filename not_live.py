@@ -2,7 +2,6 @@ TICKERS = ["AAPL"]#, "MSFT", "GOOGL", "AMZN", "TSLA"]
 TICKER_DICT = {ticker:i for i,ticker in enumerate(TICKERS)}
 # History length for evaluating stock data
 HISTORY_LENGTH = 7  # Adjusted to 7 days to match yfinance's 1-minute data limit
-
 MOVING_AVG_NUM=10
 
 import yfinance as yf
@@ -75,6 +74,7 @@ def next_full_minute(current_time):
 
 def buy_sell_logic(latest_price, moving_average, gradient, second_derivative, a_vals, a_grad):
     """
+    
     Determine buy, sell, or hold based on the latest price, moving average,
     gradient (first derivative), and second derivative.
 
@@ -96,6 +96,8 @@ def buy_sell_logic(latest_price, moving_average, gradient, second_derivative, a_
 # Main function to run the real-time simulation
 def run_real_time_simulation(tickers, initial_investment, interval=60):
     cash = initial_investment
+    # read latest csv line
+
     stock_holdings_info = {ticker: {'quantity': 0, 'average_cost': 0} for ticker in tickers}
     portfolio_value_over_time = []
     all_data = {ticker: pd.read_excel("Data.xlsx", index_col=0) for ticker in tickers}
@@ -243,8 +245,10 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                 quantity_held = stock_holdings_info[ticker]["quantity"]
 
                 # All logic to decide if any ticker is being bought or sold should go here 
-
+                
                 var = buy_sell_logic(latest_price,avg, gradient,d2y, a_values, a_grad)
+                # var2 = buy_sell_logic_2(latest_price,avg, gradient,d2y, a_values, a_grad)
+
                 if var=="buy" and quantity_held == 0:
                     investment_amount = 1000 #determine_investment_amount(cash, risk_score)
                     quantity, remaining_cash, stock_holdings_info = buy_stock(ticker, cash, latest_price, investment_amount, risk_score, stock_holdings_info)
