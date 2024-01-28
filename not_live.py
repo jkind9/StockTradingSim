@@ -1,8 +1,7 @@
 TICKERS = ["AAPL"]#, "MSFT", "GOOGL", "AMZN", "TSLA"]
 TICKER_DICT = {ticker:i for i,ticker in enumerate(TICKERS)}
 # History length for evaluating stock data
-HISTORY_LENGTH = 7  # Adjusted to 7 days to match yfinance's 1-minute data limit
-
+HISTORY_LENGTH = 7  # max to 7 days to match yfinance's 1-minute data limit
 MOVING_AVG_NUM=10
 
 import yfinance as yf
@@ -17,6 +16,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
+
+from fitting import *
 
 
 def output_graph(df):
@@ -49,50 +50,10 @@ def output_graph(df):
     # Optionally close the figure
     plt.close(fig)
 
-def linear_regression(x,y):
-    x=np.array(x)
-    y = np.array(y)
-    # Reshape the data (needed when you have a single feature)
-    x = x.reshape(-1, 1)
-
-    # Create a linear regression model
-    model = LinearRegression()
-
-    # Fit the model to the data
-    model.fit(x, y)
-
-    # Get the coefficients (slope and intercept)
-    slope = model.coef_[0]
-    intercept = model.intercept_
-    return slope, intercept
-
 # Function to fetch real-time stock data
 def fetch_real_time_stock_data(ticker, period='7d', interval='1m'):
     stock_data = yf.download(ticker, period=period, interval=interval)
     return stock_data
-
-# Pseudo function for buying stocks
-def buy_stock(ticker, cash, price, investment_amount, risk_score, stock_holdings_info):
-    quantity = int(investment_amount // price)
-
-    remaining_cash = cash - quantity*price
-    print(f"Bought {quantity} shares of {ticker} at ${price} each. Investment amount: ${investment_amount}, Risk score: {risk_score:.2f}.")
-    if ticker in stock_holdings_info:
-        stock_holdings_info[ticker]['quantity'] += quantity
-        total_cost = stock_holdings_info[ticker]['average_cost'] * stock_holdings_info[ticker]['quantity']
-        stock_holdings_info[ticker]['average_cost'] = (total_cost + investment_amount) / stock_holdings_info[ticker]['quantity']
-    else:
-        stock_holdings_info[ticker] = {'quantity': quantity, 'average_cost': price}
-    return quantity, remaining_cash, stock_holdings_info
-
-# Pseudo function for selling stocks
-def sell_stock(ticker, quantity, price, stock_holdings_info):
-    cash = quantity * price
-    print(f"Sold {quantity} shares of {ticker} at ${price} each.")
-    stock_holdings_info[ticker]['quantity'] -= quantity
-    if stock_holdings_info[ticker]['quantity'] == 0:
-        stock_holdings_info[ticker]['average_cost'] = 0
-    return cash
 
 # Function to assess risk based on recent price volatility
 def assess_risk(data, slope,intercept):
@@ -100,7 +61,6 @@ def assess_risk(data, slope,intercept):
     actual_vals = data
     predicted_vals = [slope*i + intercept for i in data]
     return r2_score(actual_vals, predicted_vals)
-
 
 # Function to determine investment amount based on risk
 def determine_investment_amount(cash, risk_score, max_percent=0.25):
@@ -201,20 +161,6 @@ def buy_sell_logic(latest_price, moving_average, gradient, second_derivative, a_
         return "buy"
     elif a_grad<-0.00025:
         return "sell"
-    
-def fit_quadratic_polynomial(x, y):
-    """
-    Fit a quadratic polynomial (y = ax^2 + bx + c) to the given data points.
-
-    :param x: Array-like, independent variable.
-    :param y: Array-like, dependent variable.
-    :return: Coefficients of the quadratic polynomial.
-    """
-    # Fit the quadratic polynomial
-    coefficients = np.polyfit(x, y, 2)
-
-    # Return the coefficients (a, b, c)
-    return coefficients
 
 # Main function to run the real-time simulation
 def run_real_time_simulation(tickers, initial_investment, interval=60):
@@ -407,7 +353,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
 
     except KeyboardInterrupt:
         print("Simulation stopped.")
-        
+
         out_df = pd.DataFrame.from_dict(out_data_dict)
         output_graph(out_df)
         out_df.to_excel("Output.xlsx")
