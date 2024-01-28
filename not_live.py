@@ -264,47 +264,49 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
         gradients = []
         a_values=[]
 
+
+        # This is where the sim loop begins. The first section of the loop is about collecting stats, metrics and infering models.
+        # The second section is separate so we can sort tickers by their metrics before running the buy/sell functionality.
+
         while loop_idx<len(all_data[tickers[0]].index):
             new_stock_data_dict ={}
             for ticker in tickers:
                 idx = all_data[ticker].index.get_loc(first_timestamp)+1000+loop_idx
                 new_stock_data_dict[ticker]= all_data[ticker].iloc[:idx]
 
-            # print(new_stock_data_dict)
+            # This loop iterates through the new_stock_data_dict and finds ticker specific information. The information is then stored in live stats.
+            # This ensures the number of stocks watched at one time is dynamic.
+            
             live_stats = {}
             for i, (ticker, stock_data) in enumerate(new_stock_data_dict.items()):
                 # Get the latest price and time
                 latest_price = stock_data['Close'].iloc[-1]
                 previous_data = stock_data['Close'].tail(MOVING_AVG_NUM).tolist()
                 # print("Ticker:", ticker, "| i:", i, "| Latest Price:", latest_price)
+
+                # Update graphs, using the index for finding the correct axis, moving blue line, line of best fit etc.
                 ax = axes[i]
                 line = lines[i]  
                 vline = vline_dict[ticker]              
                 straight_line = straight_line_dict[ticker]              
-                #Check if stock is updated
-
                 update_graph(ax, line, [loop_idx, latest_price])
-                
+
                 # Linear Regression
                 gradient,intercept = linear_regression(x= range(loop_idx-MOVING_AVG_NUM, loop_idx), y = previous_data)
                 #Polynomial Regression
                 coefficients = fit_quadratic_polynomial(range(loop_idx-MOVING_AVG_NUM, loop_idx), previous_data)
 
                 a_values.extend([coefficients[0]])
-                # update_or_add_line(ax, gradient=gradient, intercept=intercept, line_label="Trendline")
                 risk_score = assess_risk(previous_data, gradient, intercept)
                 gradients.extend([gradient])
 
+                # ensure enough loops have run to get the previous data required for trends
                 if loop_idx>= MOVING_AVG_NUM:
-
-
                     d2y,__ = linear_regression(x= range(MOVING_AVG_NUM), y = gradients[-MOVING_AVG_NUM:])
                     a_grad,__ = linear_regression(x= range(MOVING_AVG_NUM), y = a_values[-MOVING_AVG_NUM:])
-                    print("AGRAD", a_grad)
+                    
                     # handle linear regression  plots
-                    print("Gradient:", gradient, "| d2y: ", d2y)
                     x_start, x_end = loop_idx - MOVING_AVG_NUM, loop_idx+1  # X-values between which the line is drawn
-                    # Calculate corresponding y-values
                     y_start = gradient * x_start + intercept
                     y_end = gradient * x_end + intercept
                     vline.set_xdata(loop_idx - MOVING_AVG_NUM)
@@ -315,9 +317,11 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                     y_values = np.polyval(coefficients, x_values)
                     quad_line.set_data(x_values, y_values)
 
+                    plt.draw()  
+
                     avg =sum(previous_data)/len(previous_data)
 
-                    plt.draw()  
+                    # append metrics to storage for later exporting
                     out_data_dict["gradient"].extend([gradient])
                     out_data_dict["d2y"].extend([d2y])
                     out_data_dict["latest_price"].extend([latest_price])
@@ -325,7 +329,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                     out_data_dict["a_grad"].extend([a_grad])
                     
 
-
+                    #update the live stats and metrics ready for the buy/sell functionality
                     live_stats[ticker] = {"gradient":gradient,
                                         "d2y": d2y,
                                         "latest_price": latest_price,
@@ -338,14 +342,16 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                     live_stats[ticker] = {}
 
 
-
+            # approx structure of how tracking different methods will work. Each method should have its own associated cash and stock tracker
             # methods =["averages", "GPT", "gradient"]
-            # method_values = {key: initial_investment for key in methods} configure to work with different methods later
+            # method_values = {key: [initial_investment, stockInfoDict] for key in methods} configure to work with different methods later
 
             total_stock_val = 0
             for ticker in tickers:
                 if live_stats[ticker]=={}:
                     continue
+                
+                #get data and metrics from live_stats
                 gradient = live_stats[ticker]["gradient"]
                 d2y = live_stats[ticker]["d2y"]
                 latest_price = live_stats[ticker]["latest_price"]
@@ -358,6 +364,9 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                 text_dict[ticker].set_text('a_grad:'+str(round(a_grad,5)))
 
                 quantity_held = stock_holdings_info[ticker]["quantity"]
+
+                # All logic to decide if any ticker is being bought or sold should go here 
+
                 var = buy_sell_logic(latest_price,avg, gradient,d2y, a_values, a_grad)
                 if var=="buy" and quantity_held == 0:
                     investment_amount = 1000 #determine_investment_amount(cash, risk_score)
@@ -377,13 +386,14 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
             
             total_value = cash
             total_value += total_stock_val
+            out_data_dict["total_value"].extend([total_value])
 
-            print("Cash:", cash, "| Stock worth:", total_stock_val )
-            print("Portfolio worth:: ", total_value)
+            print("Cash:", cash, "| Stock worth:", total_stock_val, "|Portfolio worth:: ", total_value )
             
+            # Handle total_value plot and ensure updates
             ax = axes[n-1]
-            ax.set_xlim(0, 20000)
-            ax.set_ylim(0, 20000)
+            ax.set_xlim(0, max(out_data_dict["total_value"]))
+            ax.set_ylim(0, max(out_data_dict["total_value"]))
             line = lines[n-1]
             update_graph(ax, line, [loop_idx, total_value])
 
@@ -397,6 +407,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
 
     except KeyboardInterrupt:
         print("Simulation stopped.")
+        
         out_df = pd.DataFrame.from_dict(out_data_dict)
         output_graph(out_df)
         out_df.to_excel("Output.xlsx")
