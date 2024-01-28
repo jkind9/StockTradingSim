@@ -99,7 +99,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
     stock_holdings_info = {ticker: {'quantity': 0, 'average_cost': 0} for ticker in tickers}
     portfolio_value_over_time = []
     all_data = {ticker: pd.read_excel("Data.xlsx", index_col=0) for ticker in tickers}
-    metrics = ["latest_price", "gradient", "d2y", "avg", "a_grad"]
+    metrics = ["latest_price", "gradient", "d2y", "avg", "a_grad", "total_value"]
     out_data_dict ={metric:[] for metric in metrics}
 
     first_timestamp = all_data["AAPL"].index[0]
