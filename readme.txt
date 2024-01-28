@@ -9,6 +9,8 @@ If Jordan can't figure out how to use the model to just buy stock, find out how 
 
 ______________________________
 Jordan to do list
+______________________________
+
 Learn what a fucking option is and how to incorporate into current infrastructure, or, convert monte carlo strategy into normal buy/sell
 
-______________________________
+
