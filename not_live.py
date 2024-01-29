@@ -24,7 +24,7 @@ def fetch_real_time_stock_data(ticker, period='7d', interval='1m'):
     return stock_data
 
 # Pseudo function for buying stocks
-def buy_stock(ticker, cash, price, investment_amount, risk_score, stock_holdings_info):
+def buy_stock(ticker, cash, price, investment_amount, stock_holdings_info):
     quantity = int(investment_amount // price)
 
     remaining_cash = cash - quantity*price
@@ -94,13 +94,13 @@ def buy_sell_logic(latest_price, moving_average, gradient, second_derivative, a_
 
 
 # Main function to run the real-time simulation
-def run_real_time_simulation(tickers, initial_investment, interval=60):
+def run_real_time_simulation(initial_investment, interval=60):
     cash = initial_investment
     # read latest csv line
 
-    stock_holdings_info = {ticker: {'quantity': 0, 'average_cost': 0} for ticker in tickers}
+    stock_holdings_info = {ticker: {'quantity': 0, 'average_cost': 0} for ticker in TICKERS}
     portfolio_value_over_time = []
-    all_data = {ticker: pd.read_excel("Data.xlsx", index_col=0) for ticker in tickers}
+    all_data = {ticker: pd.read_excel("Data.xlsx", index_col=0) for ticker in TICKERS}
     metrics = ["latest_price", "gradient", "d2y", "avg", "a_grad", "total_value"]
     out_data_dict ={metric:[] for metric in metrics}
 
@@ -133,12 +133,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
 
         for ticker in TICKERS:
             vline = ax.axvline(x=0, color='blue', linestyle='--', label='Current Position')
-            straight_line, = ax.plot([], [], color='blue', linestyle='-', label='Grad Line')
-            quad_line, = ax.plot([], [],color='yellow', linestyle='-', label='Grad Line')
             vline_dict[ticker] = vline
-            straight_line_dict[ticker]=straight_line
-            text = ax.text(1, 1, 'Waiting...', fontsize=12, color='red', ha='right', va='top',  transform=ax.transAxes)
-            text_dict[ticker] = text
 
         gradients = []
         a_values=[]
@@ -147,9 +142,9 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
         # This is where the sim loop begins. The first section of the loop is about collecting stats, metrics and infering models.
         # The second section is separate so we can sort tickers by their metrics before running the buy/sell functionality.
 
-        while loop_idx<len(all_data[tickers[0]].index):
+        while loop_idx<len(all_data[TICKERS[0]].index):
             new_stock_data_dict ={}
-            for ticker in tickers:
+            for ticker in TICKERS:
                 idx = all_data[ticker].index.get_loc(first_timestamp)+1000+loop_idx
                 new_stock_data_dict[ticker]= all_data[ticker].iloc[:idx]
 
@@ -167,7 +162,6 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                 ax = axes[i]
                 line = lines[i]  
                 vline = vline_dict[ticker]              
-                straight_line = straight_line_dict[ticker]              
                 update_graph(ax, line, [loop_idx, latest_price])
 
                 # Linear Regression
@@ -176,7 +170,6 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                 coefficients = fit_quadratic_polynomial(range(loop_idx-MOVING_AVG_NUM, loop_idx), previous_data)
 
                 a_values.extend([coefficients[0]])
-                risk_score = assess_risk(previous_data, gradient, intercept)
                 gradients.extend([gradient])
 
                 # ensure enough loops have run to get the previous data required for trends
@@ -189,12 +182,10 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
                     y_start = gradient * x_start + intercept
                     y_end = gradient * x_end + intercept
                     vline.set_xdata(loop_idx - MOVING_AVG_NUM)
-                    straight_line.set_data([x_start, x_end],[y_start, y_end])
 
                     # handle polynomial regression plots
                     x_values = np.linspace(x_start, x_end, 500)
                     y_values = np.polyval(coefficients, x_values)
-                    quad_line.set_data(x_values, y_values)
 
                     plt.draw()  
 
@@ -226,7 +217,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
             # method_values = {key: [initial_investment, stockInfoDict] for key in methods} configure to work with different methods later
 
             total_stock_val = 0
-            for ticker in tickers:
+            for ticker in TICKERS:
                 if live_stats[ticker]=={}:
                     continue
                 
@@ -251,7 +242,7 @@ def run_real_time_simulation(tickers, initial_investment, interval=60):
 
                 if var=="buy" and quantity_held == 0:
                     investment_amount = 1000 #determine_investment_amount(cash, risk_score)
-                    quantity, remaining_cash, stock_holdings_info = buy_stock(ticker, cash, latest_price, investment_amount, risk_score, stock_holdings_info)
+                    quantity, remaining_cash, stock_holdings_info = buy_stock(ticker, cash, latest_price, investment_amount, stock_holdings_info)
                     cash = remaining_cash
                     add_vertical_line(ax, x=loop_idx, color='green')
                     plt.draw()  

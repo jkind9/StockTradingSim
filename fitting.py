@@ -16,7 +16,7 @@ def fit_quadratic_polynomial(x, y):
     return coefficients
 
 def linear_regression(x,y):
-    x=np.array(x)
+    x= np.array(x)
     y = np.array(y)
     # Reshape the data (needed when you have a single feature)
     x = x.reshape(-1, 1)
