@@ -22,39 +22,15 @@ import json
 warnings.filterwarnings("ignore")
 from fitting import *
 from graphing import *
+from simulation import Simulation
+import buy_sell_logic
 
-TICKERS = ["AAPL"]#, "MSFT", "GOOGL", "AMZN", "TSLA"]
-TICKER_DICT = {ticker:i for i,ticker in enumerate(TICKERS)}
-# History length for evaluating stock data
-HISTORY_LENGTH = 7  # Adjusted to 7 days to match yfinance's 1-minute data limit
-MOVING_AVG_NUM=10
-
-def next_full_minute(current_time):
-    # Get the current time
-
-    # Add one minute to the current time
-    next_minute = current_time + timedelta(minutes=1)
-
-    # Reset seconds and microseconds to zero
-    next_full_minute = next_minute.replace(second=0, microsecond=0)
-
-    return next_full_minute
-
-# Function to fetch real-time stock data
-def fetch_real_time_stock_data(ticker, period='7d', interval='1m'):
-    stock_data = yf.download(ticker, period=period, interval=interval)
-    return stock_data
-
-def buy_sell_logic(latest_price,avg, gradient,d2y, a_values, a_grad):
-    if latest_price <avg and a_grad>0:
-        return "buy"
-    if latest_price>avg and a_grad<0:
-        return "sell"
-
-class App:
+class App():
     def __init__(self, root):
         self.root = root
         self.cash = 10000
+        self.sim = Simulation(10000, "Data.xlsx", buy_sell_logic.grad)
+        self.root.bind('<Escape>', self.on_escape)
 
         self.root.title("Dynamic Plots")
 
@@ -63,11 +39,12 @@ class App:
         # Tab 1
         self.tab1 = ttk.Frame(self.tab_control)
         self.tab_control.add(self.tab1, text='Live Price')
-        n = len(TICKERS)+1
-
-        self.fig1, self.axes1 = plt.subplots(n, 1, figsize=(8, n * 3))    # Initialize a line object on the axes
+        
         # Check if only one subplot is created (which is not a list), and convert it to a list
-        if n == 1:
+        self.n = len(self.sim.tickers)+1
+        self.fig1, self.axes1 = plt.subplots(self.n, 1, figsize=(8, self.n * 3))    # Initialize a line object on the axes
+
+        if self.n == 1:
             self.axes1 = [self.axes1]
         self.line_plots = [ax.plot([], [], label=f'Line {i+1}')[0] for i, ax in enumerate(self.axes1)]
 
@@ -85,14 +62,62 @@ class App:
 
         self.start_sim_button = tk.Button(root, text= "Start Simulation", command = self.start_running_sim)
         self.start_sim_button.pack()
+        self.stop_sim_button = tk.Button(root, text= "Stop Simulation", command = self.stop_running_sim)
+        self.stop_sim_button.pack()
+        self.stop_sim_button.config(state=tk.DISABLED)
+
+        
+    def start_running_sim(self):
+        self.start_sim_button.config(state=tk.DISABLED)
+        self.stop_sim_button.config(state=tk.NORMAL)
+
+        self.sim.start_simulation()
+        self.update_graph_thread()
+    
+    def stop_running_sim(self):
+        self.stop_sim_button.config(state=tk.DISABLED)
+        self.start_sim_button.config(state=tk.NORMAL)
+        self.sim.stop_simulation()
+
+    def update_graph_thread(self):
+        """Start the simulation in a separate thread."""
+        self.graphing_thread = threading.Thread(target=self.update_graph_gui, daemon=True)
+        self.graphing_thread.start()
+
+    def update_graph_gui(self):
+        for ticker in self.sim.tickers:
+            prices = self.sim.out_data_dict[ticker]["price"]
+            if prices==[]:
+                continue
+            ticker_idx = self.sim.ticker_dict[ticker]
+            ax = self.axes1[ticker_idx]
+            line = self.line_plots[ticker_idx]
+
+            y_data = np.array(prices)
+            x_data = np.array(list(range(len(prices))))
+
+            update_graph(ax, line, x_data, y_data)
 
 
-    def on_closing(self):
-        self.running = False
-        self.root.destroy()
+        ax = self.axes1[self.n-1]
+        total_value = self.sim.out_data_dict["total_value"]
+        if total_value!=[]:
+            line = self.line_plots[self.n-1]
+            y_data = np.array(total_value)
+            x_data = np.array(list(range(len(total_value))))
+            update_graph(ax, line, x_data,y_data)
+
+        self.canvas1.draw()
+        if self.sim.running:
+            self.root.after(100, self.update_graph_gui)
+
+
+    def on_escape(self,event=None):
+        print("Escape key pressed!")
+        self.sim.stop_simulation()
+        quit()
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
-    root.protocol("WM_DELETE_WINDOW", app.on_closing)
     root.mainloop()

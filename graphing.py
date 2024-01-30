@@ -31,7 +31,7 @@ def output_graph(df):
     plt.close(fig)
 
 
-def update_graph(ax, line, new_data):
+def update_graph(ax, line, x_data, y_data):
     """
     Updates the graph with new data and adjusts the axes limits to fit all data points.
 
@@ -41,8 +41,8 @@ def update_graph(ax, line, new_data):
     new_data (tuple): A tuple (new_x, new_y) representing the new data point.
     """
     # Update the line data
-    line.set_xdata(np.append(line.get_xdata(), new_data[0]))
-    line.set_ydata(np.append(line.get_ydata(), new_data[1]))
+    line.set_xdata(x_data)
+    line.set_ydata(y_data)
 
     # Adjust the x and y limits to fit all data points
     ax.set_xlim(min(line.get_xdata()), max(line.get_xdata()))
