@@ -29,7 +29,7 @@ class App():
     def __init__(self, root):
         self.root = root
         self.cash = 10000
-        self.sim = Simulation(10000, "Data.xlsx", buy_sell_logic.grad)
+        self.sim = Simulation(starting_cash=10000, file_path= "Data.xlsx")
         self.root.bind('<Escape>', self.on_escape)
 
         self.root.title("Dynamic Plots")
@@ -41,6 +41,7 @@ class App():
         self.tab_control.add(self.tab1, text='Live Price')
         
         # Check if only one subplot is created (which is not a list), and convert it to a list
+        print(self.sim.tickers)
         self.n = len(self.sim.tickers)+1
         self.fig1, self.axes1 = plt.subplots(self.n, 1, figsize=(8, self.n * 3))    # Initialize a line object on the axes
 

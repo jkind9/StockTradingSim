@@ -22,13 +22,14 @@ MOVING_AVG_NUM = 10
 ATTRIBUTES = [ "price", "gradient", "d2y", "avg", "poly_a", "a_grad"]
 
 class Simulation:
-    def __init__(self, starting_cash, file_path=None, tickers = TICKERS, logic = buy_sell_logic.a_grad):
+    def __init__(self, starting_cash=10000, file_path=None, tickers = TICKERS, logic = buy_sell_logic.a_grad):
         self.chosen_func = logic
         self.running = False
         self.thread = None
         self.cash = starting_cash
         self.file_path = file_path
         self.tickers = tickers
+        print("SIM TICKERS:: ", tickers)
         self.ticker_dict ={ticker: i for i,ticker in enumerate(TICKERS)}
 
     def load_data(self):
@@ -217,9 +218,9 @@ class Simulation:
             self.stock_holdings_info[ticker] = {'quantity': quantity, 'average_cost': price}
 
 
-file_path = "Data.xlsx"
-# Example usage
-sim = Simulation(starting_cash=10000, file_path = file_path)
-sim.start_simulation()
-time.sleep(2)  # Let the simulation run for 5
-sim.stop_simulation()
+# file_path = "Data.xlsx"
+# # Example usage
+# sim = Simulation(starting_cash=10000, file_path = file_path)
+# sim.start_simulation()
+# time.sleep(2)  # Let the simulation run for 5
+# sim.stop_simulation()
