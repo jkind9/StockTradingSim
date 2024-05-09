@@ -22,16 +22,24 @@ MOVING_AVG_NUM = 10
 ATTRIBUTES = [ "price", "gradient", "d2y", "avg", "poly_a", "a_grad"]
 
 class Simulation:
-    def __init__(self, starting_cash=10000, file_path=None, tickers = TICKERS, logic = buy_sell_logic.a_grad):
+    def __init__(self, starting_cash=10000, file_path=None, tickers = TICKERS, logic = buy_sell_logic.a_grad, graphing=False):
         self.chosen_func = logic
         self.running = False
         self.thread = None
         self.cash = starting_cash
         self.file_path = file_path
         self.tickers = tickers
+        self.graphing = graphing
+        self.total_stock_val = 0
+        self.total_value = starting_cash
+        self.starting_cash = starting_cash
+
+        self.results = {"TotalValue":[starting_cash], "ProfitOverTime":[0], "PositiveTradeRatio":[0]}
         print("SIM TICKERS:: ", tickers)
         self.ticker_dict ={ticker: i for i,ticker in enumerate(TICKERS)}
-
+        if graphing:
+            fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+            
     def load_data(self):
         if "sim_data/stock_holdings.json" in os.listdir("sim_data"):
             with open("sim_data/stock_holdings.json", 'r') as file:
@@ -93,11 +101,15 @@ class Simulation:
 
             # This loop iterates through the new_stock_data_dict and finds ticker specific information. The information is then stored in live stats.
             # This ensures the number of stocks watched at one time is dynamic.
+            if self.method == "stock":
+                run = self.get_live_stats(new_stock_data_dict)
+                if run: self.process_live_stats()
+                self.loop_idx+=1
 
-            run = self.get_live_stats(new_stock_data_dict)
-            if run: self.process_live_stats()
-            # time.sleep(1)
-            self.loop_idx+=1
+            elif self.method == "options":
+                self.get_ticker_option_data(new_stock_data_dict)
+
+
 
     def run_live_sim(self):
         pass
@@ -110,7 +122,16 @@ class Simulation:
                 
                 self.out_data_dict[ticker][attribute].extend([att])
 
-    
+    def get_ticker_option_data(self, new_stock_data_dict, option_data):
+        quantity = 5
+        option_value, strike_price = option_data
+        bought_options={}
+        for ticker in TICKERS:
+            var = self.chosen_func(new_stock_data_dict) # output is buycall, buyput, hold
+            for command in var:
+                if command=="buycall":
+                    bought_options[ticker]+=quantity*option_value
+            
     def get_live_stats(self, new_stock_data_dict):
         self.live_stats = {ticker:{} for ticker in TICKERS}
         run =[True]
@@ -177,9 +198,14 @@ class Simulation:
         self.total_value = self.cash
         self.total_value += total_stock_val
         self.out_data_dict["total_value"].extend([self.total_value])
+        self.total_stock_val = total_stock_val
+        # print("Cash:", self.cash, "| Stock worth:", total_stock_val, "| Portfolio worth:: ", self.total_value )
+        self.profit = self.total_value - self.starting_cash
+        self.results["ProfitOverTime"].extend([self.profit])
+        self.results["TotalValue"].extend([self.total_value])
 
-        print("Cash:", self.cash, "| Stock worth:", total_stock_val, "| Portfolio worth:: ", self.total_value )
 
+       
     def stop_simulation(self):
         """Stop the simulation."""
         self.running = False
@@ -200,7 +226,7 @@ class Simulation:
     # Pseudo function for selling stocks
     def sell_stock(self, ticker, quantity, price):
         sale_cash = quantity * price
-        print(f"Sold {quantity} shares of {ticker} at ${price} each.")
+        # print(f"Sold {quantity} shares of {ticker} at ${price} each.")
         self.stock_holdings_info[ticker]['quantity'] -= quantity
         if self.stock_holdings_info[ticker]['quantity'] == 0:
             self.stock_holdings_info[ticker]['average_cost'] = 0
@@ -219,8 +245,11 @@ class Simulation:
 
 
 # file_path = "Data.xlsx"
-# # Example usage
+# # # Example usage
 # sim = Simulation(starting_cash=10000, file_path = file_path)
+# sim2 = Simulation(starting_cash=5000, file_path = file_path)
 # sim.start_simulation()
-# time.sleep(2)  # Let the simulation run for 5
+# sim2.start_simulation()
+# time.sleep(1)  # Let the simulation run for 5
 # sim.stop_simulation()
+# sim2.stop_simulation()

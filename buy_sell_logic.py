@@ -20,7 +20,17 @@ def a_grad(ticker, live_stats):
         return "sell"
 
 def grad(ticker, live_stats):
-    if live_stats[ticker]["gradient"]>0.1:
+    if live_stats[ticker]["gradient"]>0.2:
         return "buy"
-    if live_stats[ticker]["gradient"]<0.1:
+    if live_stats[ticker]["gradient"]<0.2:
         return "sell"
+
+def options(predictedCallValue, callValue, predictedPutValue, putValue, threshold =0.9):
+    # open, high, low, close, adj close, volume
+    output_commands = []
+    if callValue>=threshold*predictedCallValue:
+        output_commands.extend(["buycall"])
+    if putValue>=threshold*predictedPutValue:
+        output_commands.extend(["buyput"])
+    return output_commands
+

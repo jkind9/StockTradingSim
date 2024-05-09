@@ -3,12 +3,12 @@ import numpy as np
 class OptionPricing:
 
     def __init__(self, S0, E, T, rf, sigma, iterations):
-        self.S0 = S0 # current stock price
-        self.E = E # strike price
-        self.T = T # number of days from current stock price
-        self.rf = rf # risk-free rate
-        self.sigma = sigma # standard deviation of stock price
-        self.iterations = iterations # monte carlo iterations
+        self.S0 = S0 # current stock price #IB
+        self.E = E # strike price #IB
+        self.T = T # number of days from current stock price #IB
+        self.rf = rf # risk-free rate # comes from somewhere
+        self.sigma = sigma # standard deviation of stock price # set by us
+        self.iterations = iterations # monte carlo iterations # set by us
 
     def call_option_simulation(self):
         # 2 columns: first with 0s, second with the payoff

@@ -1,10 +1,10 @@
 {
     "AAPL": {
-        "quantity": 5,
-        "average_cost": 200.0
+        "quantity": 0,
+        "average_cost": 0
     },
     "MSFT": {
-        "quantity": 5,
-        "average_cost": 200.0
+        "quantity": 0,
+        "average_cost": 0
     }
 }

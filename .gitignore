@@ -1,1 +1,5 @@
 /FinanceSim
+data/
+sim_data/
+stock_env/
+stock_images/
