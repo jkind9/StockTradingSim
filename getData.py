@@ -1,6 +1,7 @@
 
 import requests
 from datetime import datetime, timedelta
+import time
 import json 
 from alpaca.data import StockHistoricalDataClient, StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
@@ -32,7 +33,7 @@ def get_stock_data(ticker, start_date, end_date):
     bars['timestamp'] = bars['timestamp'].astype(str)
     return bars
 
-def get_option_data(ticker, start_date_str, end_date_str):
+def get_option_data(ticker, start_date_str, end_date_str, wait=False):
     # Your Polygon.io API key
     api_key = "nfak2zW9PQJVjYSkqCS07Oc9dvEGFp9O"
 
@@ -58,11 +59,18 @@ def get_option_data(ticker, start_date_str, end_date_str):
     # Print or use the date strings
     output_data = {}
     import tqdm
+    count = 0
     for date in tqdm.tqdm(date_list):
         print(date)
         url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=+"+ticker+"&as_of="+date+"&limit=10&apiKey="+api_key
         # Make the request to Polygon.io
         response = requests.get(url)
+
+        # count to avoid API call issues (5 API calls per minute)
+        count += 1
+        if (count % 5 == 0) and wait:
+            time.sleep(60)
+            print("Waiting for 1 minute...")
         data = response.json()
         # print(data)
         # Extract and print specific fields like strike price, expiry date
