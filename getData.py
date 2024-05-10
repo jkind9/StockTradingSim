@@ -19,7 +19,7 @@ def get_stock_data(ticker, start_date, end_date):
 
     # Request historical data for Apple (AAPL)
     request_params = StockBarsRequest(
-        symbol_or_symbols=["SPY"],
+        symbol_or_symbols=[ticker],
         timeframe=TimeFrame.Day,
         start=start_date,
         end=end_date
@@ -60,7 +60,7 @@ def get_option_data(ticker, start_date_str, end_date_str):
     import tqdm
     for date in tqdm.tqdm(date_list):
         print(date)
-        url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=+"+ticker+"&as_of="+date+"&limit=10&apiKey=nfak2zW9PQJVjYSkqCS07Oc9dvEGFp9O"
+        url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=+"+ticker+"&as_of="+date+"&limit=10&apiKey="+api_key
         # Make the request to Polygon.io
         response = requests.get(url)
         data = response.json()
