@@ -15,6 +15,10 @@ ______________________________
 Jordan to do list
 ______________________________
 
-Learn what a fucking option is and how to incorporate into current infrastructure, or, convert monte carlo strategy into normal buy/sell
+Calculate (annualized) Parkinson volatility from stocks up to current date of options contract
+
+For each row of stocks data, output a call and put option 
+
+Figure out how to use these indicators in a robust trading strategy
 
 
