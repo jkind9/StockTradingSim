@@ -63,15 +63,15 @@ def get_option_data(ticker, start_date_str, end_date_str, wait=False):
     for date in tqdm.tqdm(date_list):
         print(date)
         url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=+"+ticker+"&as_of="+date+"&limit=10&apiKey="+api_key
-        # Make the request to Polygon.io
-        response = requests.get(url)
-
+        
         # count to avoid API call issues (5 API calls per minute)
-        count += 1
         if (count % 5 == 0) and wait:
             time.sleep(60)
             print("Waiting for 1 minute...")
+        
+        response = requests.get(url)
         data = response.json()
+        count += 1
         # print(data)
         # Extract and print specific fields like strike price, expiry date
         if 'results' in data:
