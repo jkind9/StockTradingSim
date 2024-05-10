@@ -58,4 +58,4 @@ options_dates = aapl.options
 # Loop through the dates and fetch the options data
 for date in options_dates:
     opt = aapl.option_chain(date)
-    print(f"Options for {date}:")
+    print(f"Options for {date}:",opt)

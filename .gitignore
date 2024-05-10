@@ -3,3 +3,5 @@ data/
 sim_data/
 stock_env/
 stock_images/
+options_data.json
+StockData.xlsx
