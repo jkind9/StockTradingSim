@@ -17,7 +17,7 @@ ______________________________
 
 Calculate (annualized) Parkinson volatility from stocks up to current date of options contract
 
-For each row of stocks data, output a call and put option 
+For each row of options data, output a call and put option from the MC-BS model
 
 Figure out how to use these indicators in a robust trading strategy
 
