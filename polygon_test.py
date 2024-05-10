@@ -31,7 +31,7 @@ def get_option_data(ticker, start_date_str, end_date_str):
     import tqdm
     for date in tqdm.tqdm(date_list):
         print(date)
-        url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=AAPL&as_of="+date+"&limit=10&apiKey=nfak2zW9PQJVjYSkqCS07Oc9dvEGFp9O"
+        url = "https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=+"+ticker+"&as_of="+date+"&limit=10&apiKey=nfak2zW9PQJVjYSkqCS07Oc9dvEGFp9O"
         # Make the request to Polygon.io
         response = requests.get(url)
         data = response.json()
@@ -42,12 +42,12 @@ def get_option_data(ticker, start_date_str, end_date_str):
     return output_data
 
 
-# Parameters for the options query
-ticker = "AAPL"
-# Specify your start and end dates
-start_date_str = "2023-01-01"
-end_date_str = "2023-12-31"
+# # Parameters for the options query
+# ticker = "AAPL"
+# # Specify your start and end dates
+# start_date_str = "2023-01-01"
+# end_date_str = "2023-12-31"
 
-output_data = get_option_data(ticker, start_date_str, end_date_str)
-with open("options_data_AAPL.json","w+") as file:
-    file.write(json.dumps(output_data))
+# output_data = get_option_data(ticker, start_date_str, end_date_str)
+# with open("options_data_AAPL.json","w+") as file:
+#     file.write(json.dumps(output_data))
