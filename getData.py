@@ -7,6 +7,7 @@ from alpaca.data import StockHistoricalDataClient, StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from alpaca.trading import TradingClient, GetAssetsRequest, GetOptionContractsRequest
 from alpaca.trading import AssetStatus
+import tqdm
 import os
 import pandas as pd
 
@@ -58,7 +59,6 @@ def get_option_data(ticker, start_date_str, end_date_str, wait=False):
 
     # Print or use the date strings
     output_data = {}
-    import tqdm
     count = 0
     for date in tqdm.tqdm(date_list):
         count += 1
